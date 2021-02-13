@@ -9,6 +9,6 @@ class sim_secondary_mem:
         self.empty_spaces = arry_size
         self.current_index = 0
 
-    def new_record_bucket(self):
-        return bucket_r(self.r_size)
+    def new_record_bucket(self,depth):
+        return bucket_r(self.r_size,depth)
         

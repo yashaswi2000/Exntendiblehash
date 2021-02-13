@@ -22,9 +22,9 @@ class bucket:
 
 #bucket to store records
 class bucket_r(bucket):
-    def __init__(self,size_of_bucket):
+    def __init__(self,size_of_bucket,depth):
          super().__init__(size_of_bucket)
-         self.depth = 0
+         self.depth = depth
          self.array = np.empty(size_of_bucket, dtype=records)
 
 #bucket to store the directories
