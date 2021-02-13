@@ -6,6 +6,9 @@ class records:
         self.sale_amount = sale
         self.customer = name
         self.category = category
+    
+    def print_record(self):
+        print(self.id," ",self.sale_amount," ",self.customer," ",self.category)
 
 #for storing the directories
 class directory:

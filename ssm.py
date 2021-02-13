@@ -8,7 +8,11 @@ class sim_secondary_mem:
         self.d_size = dbucket_size
         self.empty_spaces = arry_size
         self.current_index = 0
+        self.current_overflow = 900
 
     def new_record_bucket(self,depth):
         return bucket_r(self.r_size,depth)
+    
+    def new_direct_bucket(self):
+        return bucket_d(self.d_size)
         
