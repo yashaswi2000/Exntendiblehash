@@ -29,6 +29,14 @@ class bucket_r(bucket):
          super().__init__(size_of_bucket)
          self.depth = depth
          self.array = np.empty(size_of_bucket, dtype=records)
+         
+    def print_bucketr(self):
+        array = self.array
+        for a in array:
+            if a != None:
+                a.print_record()
+            else:
+                print(None)
 
 #bucket to store the directories
 class bucket_d(bucket):

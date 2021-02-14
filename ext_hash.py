@@ -19,7 +19,15 @@ def directory_expansion(dirarray,global_depth):
     else:
         pass
         l = 1024
-        
+
+def get_records_overflow(simobject,records_array,record_bucket):
+    pass
+    records_array.extend(record_bucket.array)
+    if record_bucket.link !=-1:
+        simobject.bucket_array[record_bucket.link] = get_records_overflow(simobject,records_array,simobject.bucket_array[record_bucket.link])
+        simobject.clean_overflow()
+    record_bucket.print_bucketr()
+    return None    
     
     
 def splitting(dirarray, simobject, index, global_depth, bucket_rc, flag):
@@ -31,12 +39,7 @@ def splitting(dirarray, simobject, index, global_depth, bucket_rc, flag):
         depth = record_bucket.depth
         link = record_bucket.link
         records_array = []
-        while True:
-            records_array.extend(record_bucket.array)
-            if record_bucket.link==-1:
-                break
-            record_bucket = simobject.bucket_array[record_bucket.link]
-
+        get_records_overflow(simobject,records_array,record_bucket)
         #new bucket creation
         simobject.bucket_array[simobject.current_index] = simobject.new_record_bucket(depth + 1)
         new_target = simobject.current_index
@@ -115,7 +118,7 @@ def insert_record(simobject,record,dirarray,global_depth,bucket_rc,flag):
                     simobject.bucket_array[simobject.current_overflow] = overflow_bucket
                     record_bucket.link = simobject.current_overflow
                     record_bucket.last = 0
-                    simobject.current_overflow += 1
+                    simobject.clean_overflow()
                     
                 else:
                     pass
@@ -131,8 +134,14 @@ def insert_record(simobject,record,dirarray,global_depth,bucket_rc,flag):
                         global_depth = directory_expansion(dirarray,global_depth)
                         visualise(dirarray,simobject)
                         global_depth = insert_record(simobject,record,dirarray,global_depth,bucket_rc,1)
-                        
-                        
+                    else:
+                        overflow_bucket = simobject.new_record_bucket(0)
+                        overflow_bucket.array[bucket_rc - overflow_bucket.empty_spaces] = record
+                        overflow_bucket.empty_spaces -= 1
+                        simobject.bucket_array[simobject.current_overflow] = overflow_bucket
+                        record_bucket.link = simobject.current_overflow
+                        record_bucket.last = 0
+                        simobject.clean_overflow()
                 
                 
     else:
@@ -170,7 +179,7 @@ def visualise(dirarray,simobject):
 
 data = pd.read_csv("dataset.csv")
 dirarray = [None]
-secondary_mem = sim_secondary_mem(1000,4,100)
+secondary_mem = sim_secondary_mem(1000,3,100)
 global_depth = 0
 dir_length = 1
 od_pointer = None
@@ -178,9 +187,14 @@ od_pointer = None
 for d in data.iterrows():
     recordobj = records(d[1][0],d[1][1],d[1][2],d[1][3])
     #print(recordobj)
-    global_depth = insert_record(secondary_mem,recordobj,dirarray,global_depth,4,0)
+    global_depth = insert_record(secondary_mem,recordobj,dirarray,global_depth,3,0)
     visualise(dirarray,secondary_mem)
     print("--------------------------")
+    
+print(secondary_mem.bucket_array[900:910])
+for i in range(900,910):
+    if secondary_mem.bucket_array[i] != None:
+        secondary_mem.bucket_array[i].print_bucketr()
 
 
 
