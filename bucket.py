@@ -15,6 +15,9 @@ class directory:
     def __init__(self,prefix,link):
         self.hash_prefix = prefix
         self.pointer = link
+    
+    def print_directory(self):
+        print(self.hash_prefix," ",self.pointer)
 
 #parent class for the buckets
 class bucket:
@@ -23,6 +26,7 @@ class bucket:
         self.link = -1
         self.last = -1
 
+
 #bucket to store records
 class bucket_r(bucket):
     def __init__(self,size_of_bucket,depth):
@@ -30,7 +34,7 @@ class bucket_r(bucket):
          self.depth = depth
          self.array = np.empty(size_of_bucket, dtype=records)
          
-    def print_bucketr(self):
+    def print_bucket(self):
         array = self.array
         for a in array:
             if a != None:
@@ -43,5 +47,13 @@ class bucket_d(bucket):
     def __init__(self,size_of_bucket):
         super().__init__(size_of_bucket)
         self.array = np.empty(size_of_bucket, dtype=directory)
+        
+    def print_bucket(self):
+        array = self.array
+        for a in array:
+            if a != None:
+                a.print_directory()
+            else:
+                print(None)
     
 
