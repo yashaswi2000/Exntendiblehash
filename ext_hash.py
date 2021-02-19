@@ -15,9 +15,11 @@ class extensible_hash:
 
     def insert_directory(self,simobject,dir_bucket,dirobject):
         if dir_bucket.link == -1 and dir_bucket.empty_spaces > 0:
+            print("last_bucket")
             dir_bucket.array[simobject.d_size - dir_bucket.empty_spaces] = dirobject
             dir_bucket.empty_spaces -= 1
         elif dir_bucket.link == -1 and dir_bucket.empty_spaces == 0:
+            dirobject.print_directory()
             directory_bucket = simobject.new_direct_bucket()
             directory_bucket.array[simobject.d_size - directory_bucket.empty_spaces] = dirobject
             directory_bucket.empty_spaces -= 1
@@ -26,6 +28,7 @@ class extensible_hash:
             dir_bucket.last = 0
             simobject.clean_overflow()
         else:
+            print(dir_bucket.link,"",self.od_pointer)
             self.insert_directory(simobject,simobject.bucket_array[dir_bucket.link],dirobject)
         
     def clean_directory(self,simobject,od_pointer):
@@ -43,6 +46,7 @@ class extensible_hash:
             link_pointer = simobject.bucket_array[od_pointer].link
             if simobject.bucket_array[link_pointer].empty_spaces == simobject.d_size:
                 simobject.bucket_array[link_pointer] = None
+                simobject.bucket_array[od_pointer].link = -1
             dir_bucket = simobject.bucket_array[od_pointer]
             send_dir = dir_bucket.array[0]
             dir_bucket.array = np.delete(dir_bucket.array,0)
@@ -62,13 +66,8 @@ class extensible_hash:
                 self.dirarray.append(directory((temp_dir.hash_prefix<<1) + 1,temp_dir.pointer))
         else:
             pass
-            l = len(self.dirarray)
+            l = self.get_direct_length(simobject)
             if self.od_pointer != None:
-                directory_bucket = simobject.bucket_array[self.od_pointer]
-                while directory_bucket.link != -1:
-                    l += simobject.d_size - directory_bucket.empty_spaces
-                    directory_bucket = simobject.bucket_array[directory_bucket.link]
-                
                 for i in range(l):
                     temp_dir = self.dirarray[0]
                     self.dirarray.pop(0)
@@ -91,8 +90,11 @@ class extensible_hash:
                             simobject.bucket_array[simobject.current_overflow] = simobject.new_direct_bucket()
                             self.od_pointer = simobject.current_overflow
                             simobject.clean_overflow()
+                        print(self.od_pointer,"call")
+                        
                         self.insert_directory(simobject, simobject.bucket_array[self.od_pointer], directory(temp_dir.hash_prefix<<1,temp_dir.pointer))
                         self.insert_directory(simobject, simobject.bucket_array[self.od_pointer], directory((temp_dir.hash_prefix<<1) + 1,temp_dir.pointer))
+                        print(simobject.bucket_array[900:910])
                         self.dirarray.append(self.clean_directory(simobject,self.od_pointer))  
                         
         self.global_depth += 1
@@ -146,9 +148,10 @@ class extensible_hash:
         if self.od_pointer != None:
             l = self.dir_length
             directory_bucket = simobject.bucket_array[self.od_pointer]
+            l += simobject.d_size - directory_bucket.empty_spaces
             while directory_bucket.link != -1:
-                l += simobject.d_size - directory_bucket.empty_spaces
                 directory_bucket = simobject.bucket_array[directory_bucket.link]
+                l += simobject.d_size - directory_bucket.empty_spaces
             return l
         else:
             return len(self.dirarray)
@@ -171,6 +174,7 @@ class extensible_hash:
         #rearrange pointers
         target_list = []
         total_l = self.get_direct_length(simobject)
+        print(total_l)
         for i in range(total_l):
             dir_i = self.get_directory(self.od_pointer, i, simobject)
             if dir_i.pointer == target:
@@ -181,6 +185,8 @@ class extensible_hash:
         
         #reset old bucket
         simobject.bucket_array[target] = simobject.new_record_bucket(depth + 1)
+        
+        visualise(self.dirarray,simobject,self.od_pointer)
         
         for i in records_array:
             self.insert_record(simobject, i, flag)
@@ -220,7 +226,7 @@ class extensible_hash:
             visualise(self.dirarray,simobject,self.od_pointer)
             self.insert_record(simobject,record,1)
             
-        elif simobject.bucket_array[dir_index.pointer].depth < global_depth:
+        elif simobject.bucket_array[dir_index.pointer].depth < self.global_depth:
             pass
             print("spltting")
             self.splitting(simobject, index,flag)
@@ -316,9 +322,9 @@ def visualise(dirarray,simobject,od_pointer):
 
 
 data = pd.read_csv("dataset.csv")
-secondary_mem = sim_secondary_mem(1000,3,100)
+secondary_mem = sim_secondary_mem(1000,4,1)
 global_depth = 0
-dir_length = 1
+dir_length = 5
 ext = extensible_hash(global_depth,dir_length)
 
 for d in data.iterrows():
@@ -328,9 +334,9 @@ for d in data.iterrows():
     print("--------------------------")
     
 print(secondary_mem.bucket_array[900:910])
-for i in range(900,910):
-    if secondary_mem.bucket_array[i] != None:
-        secondary_mem.bucket_array[i].print_bucket()
+# for i in range(900,910):
+#     if secondary_mem.bucket_array[i] != None:
+#         secondary_mem.bucket_array[i].print_bucket()
 
 
 
