@@ -8,8 +8,9 @@ class sim_secondary_mem:
         self.d_size = dbucket_size
         self.empty_spaces = arry_size
         self.current_index = 0
-        self.current_overflow = 900
-        self.start_overflow = 900
+        self.current_overflow = arry_size - 1
+        self.start_overflow = arry_size - 1
+        self.empty_list = []
 
     def new_record_bucket(self,depth):
         return bucket_r(self.r_size,depth)
@@ -17,12 +18,9 @@ class sim_secondary_mem:
     def new_direct_bucket(self):
         return bucket_d(self.d_size)
     
-    def clean_overflow(self):
+    def clean_overflow(self,space = None):
         pass
-        i = self.start_overflow
-        while self.bucket_array[i] != None:
-            i += 1
-        self.current_overflow = i
+        self.current_overflow -= 1
     
             
         

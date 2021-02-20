@@ -17,7 +17,7 @@ class directory:
         self.pointer = link
     
     def print_directory(self):
-        print(self.hash_prefix," ",self.pointer)
+        print(self.hash_prefix," ",self.pointer,"testing")
 
 #parent class for the buckets
 class bucket:

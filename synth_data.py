@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import string
 
-letters = np.array(list(string.ascii_lowercase + ' '))
+letters = np.array(list(string.ascii_lowercase))
 
 N = int(input("enter the number of records required to create ?"))
 
