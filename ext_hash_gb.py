@@ -1,6 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Feb 20 21:04:31 2021
+
+@author: yashaswi
+"""
+
 import numpy as np
 from bucket import *
-from ssm import *
+from ssm_without_garbage_collection import *
 import pandas as pd
 
 
@@ -23,10 +31,10 @@ class extensible_hash:
             directory_bucket = simobject.new_direct_bucket()
             directory_bucket.array[simobject.d_size - directory_bucket.empty_spaces] = dirobject
             directory_bucket.empty_spaces -= 1
-            over_index = simobject.update_overflow()
-            simobject.bucket_array[over_index] = directory_bucket
-            dir_bucket.link = over_index
+            simobject.bucket_array[simobject.current_overflow] = directory_bucket
+            dir_bucket.link = simobject.current_overflow
             dir_bucket.last = 0
+            simobject.clean_overflow()
         else:
             #print(dir_bucket.link,"",self.od_pointer,"this is it",simobject.current_overflow)
             self.insert_directory(simobject,simobject.bucket_array[dir_bucket.link],dirobject)
@@ -47,7 +55,6 @@ class extensible_hash:
             if simobject.bucket_array[link_pointer].empty_spaces == simobject.d_size:
                 simobject.bucket_array[link_pointer] = None
                 simobject.bucket_array[od_pointer].link = -1
-                simobject.clean_overflow(link_pointer)
             dir_bucket = simobject.bucket_array[od_pointer]
             send_dir = dir_bucket.array[0]
             dir_bucket.array = np.delete(dir_bucket.array,0)
@@ -88,9 +95,9 @@ class extensible_hash:
                         temp_dir = self.dirarray[0]
                         self.dirarray.pop(0)
                         if self.od_pointer == None:
-                            over_index = simobject.update_overflow()
-                            simobject.bucket_array[over_index] = simobject.new_direct_bucket()
-                            self.od_pointer = over_index
+                            simobject.bucket_array[simobject.current_overflow] = simobject.new_direct_bucket()
+                            self.od_pointer = simobject.current_overflow
+                            simobject.clean_overflow()
                         #print(self.od_pointer,"call")
                         
                         self.insert_directory(simobject, simobject.bucket_array[self.od_pointer], directory(temp_dir.hash_prefix<<1,temp_dir.pointer))
@@ -104,8 +111,7 @@ class extensible_hash:
         records_array.extend(record_bucket.array[0:(simobject.r_size - record_bucket.empty_spaces)])
         if record_bucket.link !=-1:
             simobject.bucket_array[record_bucket.link] = self.get_records_overflow(simobject,records_array,simobject.bucket_array[record_bucket.link])
-            simobject.clean_overflow(record_bucket.link)
-        return None
+        #record_bucket.print_bucket()
 
     def get_directory(self,od_pointer,index,simobject):
         pass
@@ -243,10 +249,10 @@ class extensible_hash:
                 overflow_bucket = simobject.new_record_bucket(0)
                 overflow_bucket.array[simobject.r_size - overflow_bucket.empty_spaces] = record
                 overflow_bucket.empty_spaces -= 1
-                over_index = simobject.update_overflow()
-                simobject.bucket_array[over_index] = overflow_bucket
-                record_bucket.link = over_index
+                simobject.bucket_array[simobject.current_overflow] = overflow_bucket
+                record_bucket.link = simobject.current_overflow
                 record_bucket.last = 0
+                simobject.clean_overflow()
                 
             else:
                 pass
@@ -266,19 +272,16 @@ class extensible_hash:
                     overflow_bucket = simobject.new_record_bucket(0)
                     overflow_bucket.array[simobject.r_size - overflow_bucket.empty_spaces] = record
                     overflow_bucket.empty_spaces -= 1
-                    over_index = simobject.update_overflow()
-                    simobject.bucket_array[over_index] = overflow_bucket
-                    record_bucket.link = over_index
+                    simobject.bucket_array[simobject.current_overflow] = overflow_bucket
+                    record_bucket.link = simobject.current_overflow
                     record_bucket.last = 0
+                    simobject.clean_overflow()
                    
 
     
 
-def visualise(dirarray,simobject,od_pointer,gd):
+def visualise(dirarray,simobject,od_pointer):
     print("visualizing the datastructure")
-    buckets = simobject.current_index
-    directories = 0
-    dir_buckets = 0
     for i in dirarray:
         print(i.hash_prefix," ",i.pointer)
         temp = simobject.bucket_array[i.pointer]
@@ -293,19 +296,15 @@ def visualise(dirarray,simobject,od_pointer,gd):
                 break 
             
             temp = simobject.bucket_array[temp.link]
-            buckets += 1
             
             print("overflow buckets -----------")
                 
         print("next bucket")
-    directories += len(dirarray)
     if od_pointer != None:
         while od_pointer != -1:
             dir_array = simobject.bucket_array[od_pointer].array
-            dir_buckets += 1
             for i in dir_array:
                 if i is not None:
-                    directories += 1
                     print(i.hash_prefix," ",i.pointer,"inside overflow")
                     temp = simobject.bucket_array[i.pointer]
                     while True:
@@ -319,18 +318,11 @@ def visualise(dirarray,simobject,od_pointer,gd):
                             break 
                         
                         temp = simobject.bucket_array[temp.link]
-                        buckets += 1
+                        
                         print("overflow buckets -----------")
                             
                     print("next bucket")
             od_pointer = simobject.bucket_array[od_pointer].link
-    
-    print("------------------------")
-    print("number of buckets : ",buckets)
-    print("number of directories : ",directories)
-    print("number of directory buckets : ",dir_buckets)
-    print("global depth : ",gd)
-    print("-------------------------")
             
             
     
@@ -378,7 +370,7 @@ if options == 1:
             recordobj = records(t_id,t_amount,c_name,c_item)
             ext.insert_record(secondary_mem,recordobj,0)
         if options == 3:
-            visualise(ext.dirarray,secondary_mem,ext.od_pointer,ext.global_depth)
+            visualise(ext.dirarray,secondary_mem,ext.od_pointer)
             print(secondary_mem.bucket_array[secondary_mem.current_overflow:ssm_size])
         
         print("what do you want to do?")
@@ -398,7 +390,7 @@ elif options == 2:
             recordobj = records(t_id,t_amount,c_name,c_item)
             ext.insert_record(secondary_mem,recordobj,0)
         if options == 3:
-            visualise(ext.dirarray,secondary_mem,ext.od_pointer,ext.global_depth)
+            visualise(ext.dirarray,secondary_mem,ext.od_pointer)
         
         print("what do you want to do?")
         print("2 : insert a record from commandline")

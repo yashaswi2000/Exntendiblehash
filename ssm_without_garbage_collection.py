@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Feb 20 21:03:29 2021
+
+@author: yashaswi
+"""
+
 import numpy as np
 from bucket import *
 
@@ -18,19 +26,10 @@ class sim_secondary_mem:
     def new_direct_bucket(self):
         return bucket_d(self.d_size)
     
-    def clean_overflow(self,space):
+    def clean_overflow(self,space = None):
         pass
-        self.empty_list.append(space)
-        
-    def update_overflow(self):
-        if len(self.empty_list) != 0:
-            temp = self.empty_list[0]
-            self.empty_list.pop(0)
-            return temp
-        else:
-            temp = self.current_overflow
-            self.current_overflow -= 1            
-            return temp
+        self.current_overflow -= 1
+    
             
         
         
